@@ -10,11 +10,11 @@ class NodeList:
     def __init__(self, nodes):
         self.nodes = nodes
         
-    def find(self, tag, attrs=[], data=[]):
+    def find(self, tag='', attrs=[], data=[]):
         results = [c.find(tag, attrs, data) for c in self.nodes]
         return NodeList([item for sublist in results for item in sublist.nodes])
     
-    def contain(self, tag, attrs=[], data=[]):
+    def contain(self, tag='', attrs=[], data=[]):
         results = [c.contain(tag, attrs, data) for c in self.nodes]
         return NodeList([item for sublist in results for item in sublist.nodes])
     
@@ -41,14 +41,14 @@ class Node:
     def add_child(self, child: Type['Node']):
         self.children.append(child)
     
-    def find(self, tag, attrs=[], data=[]):
+    def find(self, tag='', attrs=[], data=[]):
         queue = self.children.copy()
         found = []
         while len(queue) > 0:
             node = queue.pop(0)
             f_1 = lambda v: v in node.data
             f_2 = lambda kv: kv[0] in node.attrs and kv[1] in node.attrs[kv[0]]
-            if node.tag == tag and all(map(f_2, attrs)) and all(map(f_1, data)):
+            if (tag == '' or node.tag == tag) and all(map(f_2, attrs)) and all(map(f_1, data)):
                 found.append(node)
             else:
                 queue += node.children
