@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import math
+from transformers import XLMTokenizer, RobertaModel
 
 
 class Classifier(nn.Module):
@@ -48,6 +49,38 @@ class RegressionModel(nn.Module):
         sigma = self.lin2(x)
         sigma = self.activation2(sigma)
         return mean, sigma
+
+
+class RobertaRegressionModel(nn.Module):
+    def __init__(self, device):
+        super().__init__()
+
+        self.net = nn.Sequential(
+            nn.Dropout(0.3),
+            nn.Linear(768, 256),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(256, 2),
+            # nn.Linear(768, 2),
+            nn.Tanh()
+        )
+        self.device = device
+        self.tokenizer = XLMTokenizer.from_pretrained(
+            # "models/politicalBERT")
+            # "models/politicalHerBERT")
+            "allegro/herbert-klej-cased-tokenizer-v1")
+        self.model = RobertaModel.from_pretrained(
+            # "models/politicalBERT",
+            "models/politicalHerBERT",
+            # "allegro/herbert-klej-cased-v1",
+            return_dict=True)
+
+    def forward(self, x):
+        encoded = self.tokenizer(x, return_tensors='pt', padding=True)
+        encoded = {k: v.to(self.device) for k, v in encoded.items()}
+        x = self.model(**encoded)['pooler_output']
+        x = self.net(x)
+        return x
 
 
 class RegressionMCDropoutModel(nn.Module):
@@ -105,8 +138,11 @@ class RegressionMCDropoutModel(nn.Module):
         return a+b
 
     def predict(self, x, num_samples=10):
-        samples = torch.stack([self.forward(x) for _ in range(num_samples)], dim=0)
-        return samples.mean(dim=0), torch.sqrt(samples.var(dim=0)+1/self.tau)
+        samples = torch.stack([self.forward(x)
+                               for _ in range(num_samples)], dim=0)
+        # return samples.mean(dim=0), torch.sqrt(samples.var(dim=0)+1/self.tau)
+        return samples.mean(dim=0), torch.sqrt(samples.var(dim=0))
+
 
 class PoliticalTextsEncoder(nn.Module):
     def __init__(self, input_size):

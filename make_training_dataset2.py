@@ -10,9 +10,9 @@ import torch
 device = torch.device("cuda")
 
 tokenizer = XLMTokenizer.from_pretrained(
-    "allegro/herbert-klej-cased-tokenizer-v1")
+    "models/politicalBERT")
 model = RobertaModel.from_pretrained(
-    "allegro/herbert-klej-cased-v1", return_dict=True)
+    "models/politicalBERT", return_dict=True)
 model = model.to(device)
 
 
@@ -113,9 +113,9 @@ tags = {
 
 def label_to_val(tag, sentiment):
     map1 = {
-        'conservative': -1,
+        'conservative': 1,
         'center': 0,
-        'liberal': 1
+        'liberal': -1
     }
     map2 = {
         'left': -1,
@@ -126,7 +126,7 @@ def label_to_val(tag, sentiment):
     label = tags[tag].get(sentiment, None)
 
     if label:
-        return map1[label[0]], map2[label[1]]
+        return map2[label[1]], map1[label[0]]
     return None
 
 
@@ -134,8 +134,12 @@ embeddings = []
 sequences = []
 sentiments = []
 labels = []
+texts = []
 
 BATCH_SIZE = 8
+
+validation_data = pd.read_csv('validation_data.csv')
+val_ids = set(validation_data['tweet_id'])
 
 for tag in tags:
     label = tags[tag]
@@ -143,42 +147,51 @@ for tag in tags:
     data = pd.read_csv(os.path.join(
         'twitter_data', 'data', tag + '.csv'), sep='\t')
     tweets = list(data['tweet'])
-    tweets = [tweet.replace(tag, '') for tweet in tweets]
+    ids = list(data['id'])
+    tweets = [tweet.replace(tag, '') for tweet, id in zip(tweets, ids) if id not in val_ids]
     
     for i in tqdm.tqdm(range(0, len(tweets), BATCH_SIZE)):
-        embedding, seq = texts2vec(tweets[i:i+BATCH_SIZE])
+        # embedding, seq = texts2vec(tweets[i:i+BATCH_SIZE])
         sentiment = sentiment_model(
             tweets[i:i+BATCH_SIZE]).detach().cpu().numpy()
         torch.cuda.empty_cache()
         # sequences.extend(seq)
-        embeddings.append(embedding)
+        # embeddings.append(embedding)
         sentiments.append(sentiment)
-        labels.append([tag for _ in range(embedding.shape[0])])
+        labels.append([tag for _ in range(sentiment.shape[0])])
+        texts.append(tweets[i:i+BATCH_SIZE])
 
 
 sentiments = np.concatenate(sentiments)
 labels = np.concatenate(labels)
+texts = np.concatenate(texts)
 
-dataset = {
-    'X': np.concatenate(embeddings, axis=0),
-    'y_regression': [label_to_val(label, sentiment) for label, sentiment in zip(labels, sentiments)],
-}
+# dataset = {
+#     'X': np.concatenate(embeddings, axis=0),
+#     'y_regression': [label_to_val(label, sentiment) for label, sentiment in zip(labels, sentiments)],
+# }
 
-idx = []
-y = []
+# idx = []
+# y = []
 
-for i, val in enumerate(dataset['y_regression']):
-    if val is not None:
-        idx.append(i)
-        y.append(val)
+# for i, val in enumerate(dataset['y_regression']):
+#     if val is not None:
+#         idx.append(i)
+#         y.append(val)
 
-idx = np.array(idx)
+# idx = np.array(idx)
 
-dataset = {
-    'X': dataset['X'][idx],
-    'y_regression': np.array(y),
-}
+# dataset = {
+#     'X': dataset['X'][idx],
+#     'y_regression': np.array(y),
+# }
 
 
-with open('dataset2.pickle', 'wb') as f:
-    f.write(pickle.dumps(dataset))
+# with open('dataset2 fitted bert.pickle', 'wb') as f:
+#     f.write(pickle.dumps(dataset))
+
+
+labels = [label_to_val(label, sentiment) for label, sentiment in zip(labels, sentiments)]
+texts = [text for text, label in zip(texts, labels) if label is not None]
+labels = np.array([label for label in labels if label is not None])
+pd.DataFrame({"texts":texts, "economic":labels[:, 0], "worldview":labels[:, 1]}).to_csv('dataset2.csv')
