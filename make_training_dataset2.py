@@ -138,7 +138,7 @@ texts = []
 
 BATCH_SIZE = 8
 
-validation_data = pd.read_csv('validation_data.csv')
+validation_data = pd.read_csv('twitter_data/data/validation_data.csv')
 val_ids = set(validation_data['tweet_id'])
 
 for tag in tags:
@@ -194,4 +194,5 @@ texts = np.concatenate(texts)
 labels = [label_to_val(label, sentiment) for label, sentiment in zip(labels, sentiments)]
 texts = [text for text, label in zip(texts, labels) if label is not None]
 labels = np.array([label for label in labels if label is not None])
-pd.DataFrame({"texts":texts, "economic":labels[:, 0], "worldview":labels[:, 1]}).to_csv('dataset2.csv')
+pd.DataFrame({"texts":texts, "economic":labels[:, 0], "worldview":labels[:, 1]}).to_csv(
+    'twitter_data/data/dataset2.csv')

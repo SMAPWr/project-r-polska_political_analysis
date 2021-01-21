@@ -26,7 +26,7 @@ def texts2vec(text):
     output = model(**encoded)
     return output['pooler_output'].detach().cpu().numpy(), output['last_hidden_state'].detach().cpu().numpy(), 
 
-data = pd.read_csv('validation_data.csv')
+data = pd.read_csv('twitter_data/data/validation_data.csv')
 
 embeddings = []
 sequences = []
