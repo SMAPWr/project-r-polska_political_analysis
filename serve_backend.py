@@ -25,7 +25,7 @@ net.load_state_dict(torch.load('fitted_bert_epoch_15_mae_0_3427056074142456'))
 net = net.to(device)
 net.train(False)
 
-TWEETS_LIMIT = 300
+TWEETS_LIMIT = 500
 BATCH_SIZE = 5
 
 def text2vec(text):

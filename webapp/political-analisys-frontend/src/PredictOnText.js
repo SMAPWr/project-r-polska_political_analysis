@@ -38,8 +38,8 @@ const useStyles = makeStyles((theme) => ({
     marginTop: -50
   },
   title: {
-    margin: 20, 
-    marginBottom:45
+    margin: 20,
+    marginBottom: 45
   }
 }));
 
@@ -63,7 +63,7 @@ function PredictOnText() {
           <LockOutlinedIcon />
         </Avatar>
         <Typography component="h1" variant="h5" className={classes.title}>
-          Analize political attitude of specified text
+          Analyse political attitude of specified text
         </Typography>
         <Grid container>
           <Grid item xs={6}>
