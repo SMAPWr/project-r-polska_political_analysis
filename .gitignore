@@ -1,3 +1,12 @@
 __pycache__/
 .ipynb_checkpoints/
-models/
+runs/
+sentiment_data/
+twitter_data/data/
+reddit_data/data/
+wykop_data/data/
+models/politicalBERT/
+models/politicalHerBERT/
+models/fitted_bert_*
+models/*.zip
+/sentiment_data/

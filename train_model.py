@@ -53,11 +53,11 @@ for p in model.model.encoder.parameters():
 
 model = model.to(device)
 
-train_ds = pd.read_csv('dataset2.csv')
+train_ds = pd.read_csv('twitter_data/data/dataset2.csv')
 X_train = train_ds['texts'].to_numpy()
 y_train = train_ds[['economic', 'worldview']].to_numpy()
 
-test_ds = pd.read_csv('validation_data.csv')
+test_ds = pd.read_csv('twitter_data/data/validation_data.csv')
 X_test = test_ds['tweet'].to_numpy()
 y_test = test_ds[['economic', 'worldview']].to_numpy()
 
